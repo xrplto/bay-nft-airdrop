@@ -9,7 +9,8 @@
 //
 // The seed comes ONLY from the FAIRDROP_SEED env var or a gitignored .env next
 // to this file — never from an argument, never hardcoded. The derived address
-// must equal the plan's distributor or nothing is submitted.
+// must be the plan's distributor OR its on-chain RegularKey (checked live
+// against account_info) or nothing is submitted.
 //
 // Default mode creates one destination-locked, zero-cost sell offer per
 // planned transfer (NFTokenCreateOffer, Flags tfSellNFToken, Amount "0",
@@ -68,6 +69,22 @@ async function rpc(node, method, params) {
 
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
+// The signer may be the account itself (master key) or the account's on-chain
+// RegularKey — the distributor here has lsfDisableMaster set, so ONLY its
+// regular key can sign. Verified live against account_info; anything else refuses.
+async function assertAuthority(node, wallet, account) {
+    const r = await rpc(node, 'account_info', { account, ledger_index: 'validated' });
+    if (r.status === 'error') throw new Error(`account_info ${account}: ${r.error}`);
+    if (wallet.address === account) {
+        // lsfDisableMaster (0x00100000, rippled LedgerFormats.h) — master signature would tefMASTER_DISABLED
+        if (((r.account_data.Flags || 0) & 0x00100000) !== 0)
+            throw new Error(`master key of ${account} is DISABLED on-chain — sign with its RegularKey seed`);
+        return 'master key';
+    }
+    if (r.account_data.RegularKey === wallet.address) return `on-chain RegularKey ${wallet.address}`;
+    throw new Error(`seed derives ${wallet.address} — neither ${account} nor its RegularKey (${r.account_data.RegularKey || 'none set'}) — refusing`);
+}
+
 async function validatedLedger(node) {
     const r = await rpc(node, 'ledger', { ledger_index: 'validated' });
     return Number(r.ledger_index || r.ledger.ledger_index);
@@ -77,10 +94,10 @@ async function validatedLedger(node) {
 // polls each to validation. Returns [{tx, hash, result}] — result is the final
 // meta TransactionResult, or 'SUBMIT_FAILED:<code>' / 'EXPIRED'.
 class TxSender {
-    constructor(node, wallet) { this.node = node; this.wallet = wallet; this.seq = null; }
+    constructor(node, wallet, account) { this.node = node; this.wallet = wallet; this.account = account || wallet.address; this.seq = null; }
     async syncSeq() {
-        const r = await rpc(this.node, 'account_info', { account: this.wallet.address, ledger_index: 'validated' });
-        if (r.status === 'error') throw new Error(`account_info ${this.wallet.address}: ${r.error}`);
+        const r = await rpc(this.node, 'account_info', { account: this.account, ledger_index: 'validated' });
+        if (r.status === 'error') throw new Error(`account_info ${this.account}: ${r.error}`);
         this.seq = r.account_data.Sequence;
     }
     async sendBatch(txs) {
@@ -88,7 +105,7 @@ class TxSender {
         const lls = await validatedLedger(this.node) + 60;
         const out = [];
         for (const tx of txs) {
-            const full = { ...tx, Account: this.wallet.address, Fee: FEE_DROPS, Sequence: this.seq++, LastLedgerSequence: lls };
+            const full = { ...tx, Account: this.account, Fee: FEE_DROPS, Sequence: this.seq++, LastLedgerSequence: lls };
             const { tx_blob, hash } = this.wallet.sign(full);
             const sub = await rpc(this.node, 'submit', { tx_blob });
             const code = sub.engine_result || sub.error || 'unknown';
@@ -150,11 +167,9 @@ async function nftOwner(node, nftId) {
 // ------------------------------------------------------------------- modes
 async function modeOffers(a, node, wallet) {
     const plan = JSON.parse(fs.readFileSync(a.plan || 'plan.json', 'utf8'));
-    if (wallet.address !== plan.distributor) {
-        throw new Error(`seed derives ${wallet.address} but plan distributor is ${plan.distributor} — refusing`);
-    }
+    console.log(`[execute] signing for ${plan.distributor} via ${await assertAuthority(node, wallet, plan.distributor)}`);
     const limit = a.limit ? Number(a.limit) : Infinity;
-    const existing = await ownSellOffers(node, wallet.address);
+    const existing = await ownSellOffers(node, plan.distributor);
     const pending = [], skippedOffer = [], skippedClaimed = [];
     for (const t of plan.transfers) {
         const offers = existing.get(t.nft_id) || [];
@@ -163,7 +178,7 @@ async function modeOffers(a, node, wallet) {
         if (pending.length < limit) pending.push(t);
     }
     console.log(`[execute] plan=${plan.transfers.length} already-offered=${skippedOffer.length} already-claimed=${skippedClaimed.length} to-create=${pending.length}`);
-    const sender = new TxSender(node, wallet);
+    const sender = new TxSender(node, wallet, plan.distributor);
     let ok = 0; const failed = [];
     for (let i = 0; i < pending.length; i += 8) {
         const batch = pending.slice(i, i + 8).map(t => ({
@@ -186,15 +201,13 @@ async function modeCommit(a, node, wallet) {
     const fair = require('./fairdrop.js');
     const snap = JSON.parse(fs.readFileSync(a.snapshot || 'snapshot.json', 'utf8'));
     if (fair.snapshotHashOf(snap) !== snap.snapshotHash) throw new Error('snapshot corrupted');
-    if (wallet.address !== snap.distributor) {
-        throw new Error(`seed derives ${wallet.address} but snapshot distributor is ${snap.distributor} — refusing`);
-    }
+    console.log(`[execute] signing for ${snap.distributor} via ${await assertAuthority(node, wallet, snap.distributor)}`);
     const beaconLedger = Number(a['beacon-ledger']);
     if (!beaconLedger) throw new Error('required: --beacon-ledger N (a FUTURE ledger index)');
     const codeSha256 = fair.sha256hex(fs.readFileSync(path.join(__dirname, 'fairdrop.js')));
     const commitment = fair.commitmentOf(snap.snapshotHash, codeSha256, beaconLedger);
     console.log(`[execute] commitment ${commitment} (beacon ledger ${beaconLedger})`);
-    const sender = new TxSender(node, wallet);
+    const sender = new TxSender(node, wallet, snap.distributor);
     const [r] = await sender.sendBatch([{
         TransactionType: 'AccountSet',
         Memos: [{ Memo: {
@@ -208,9 +221,9 @@ async function modeCommit(a, node, wallet) {
 
 async function modeCancelOpen(a, node, wallet) {
     const plan = JSON.parse(fs.readFileSync(a.plan || 'plan.json', 'utf8'));
-    if (wallet.address !== plan.distributor) throw new Error('wallet is not the plan distributor — refusing');
+    console.log(`[execute] signing for ${plan.distributor} via ${await assertAuthority(node, wallet, plan.distributor)}`);
     const wanted = new Map(plan.transfers.map(t => [t.nft_id, t.to]));
-    const existing = await ownSellOffers(node, wallet.address);
+    const existing = await ownSellOffers(node, plan.distributor);
     const ids = [];
     for (const [nftId, offers] of existing) {
         for (const o of offers) {
@@ -218,7 +231,7 @@ async function modeCancelOpen(a, node, wallet) {
         }
     }
     console.log(`[execute] cancelling ${ids.length} open plan offers`);
-    const sender = new TxSender(node, wallet);
+    const sender = new TxSender(node, wallet, plan.distributor);
     let failed = 0;
     for (let i = 0; i < ids.length; i += 200) { // NFTokenCancelOffer caps at 500 ids/tx
         const [r] = await sender.sendBatch([{ TransactionType: 'NFTokenCancelOffer', NFTokenOffers: ids.slice(i, i + 200) }]);
@@ -240,7 +253,7 @@ function parseArgs(argv) {
     return out;
 }
 
-module.exports = { rpc, walletFromSeed, TxSender, ownSellOffers, nftOwner, validatedLedger, sleep };
+module.exports = { rpc, walletFromSeed, assertAuthority, TxSender, ownSellOffers, nftOwner, validatedLedger, sleep };
 
 if (require.main === module) (async () => {
     loadEnv();
