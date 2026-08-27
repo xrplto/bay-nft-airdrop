@@ -146,7 +146,7 @@ const seed = s => sha256hex(s);
         [t1.transfers[a].to, t1.transfers[b].to] = [t1.transfers[b].to, t1.transfers[a].to];
         const p1 = path.join(tmp, 'tampered1.json');
         fs.writeFileSync(p1, JSON.stringify(t1));
-        const r1 = run(['verify', '--snapshot', SNAPSHOT, '--plan', p1, '--no-resweep']);
+        const r1 = run(['verify', '--snapshot', SNAPSHOT, '--plan', p1, '--no-resweep', '--allow-uncommitted']);
         check('D: swapped recipients -> verify FAILs', r1.status === 1 && /FAIL/.test(r1.out));
 
         // attacker also recomputes transfersHash over the tampered list:
@@ -155,15 +155,38 @@ const seed = s => sha256hex(s);
         t2.transfersHash = sha256hex(canonicalJson(t2.transfers));
         const p2 = path.join(tmp, 'tampered2.json');
         fs.writeFileSync(p2, JSON.stringify(t2));
-        const r2 = run(['verify', '--snapshot', SNAPSHOT, '--plan', p2, '--no-resweep']);
+        const r2 = run(['verify', '--snapshot', SNAPSHOT, '--plan', p2, '--no-resweep', '--allow-uncommitted']);
         check('D: tampered transfers with recomputed hash -> verify still FAILs',
             r2.status === 1 && r2.out.includes('FAIL  transfers reproduce exactly'));
+
+        // header tamper, transfers untouched — used to slip through as ALL PASS
+        const t4 = JSON.parse(JSON.stringify(plan));
+        t4.distributor = 'rATTACKERxxxxxxxxxxxxxxxxxxxxxxxxx';
+        const p4 = path.join(tmp, 'tampered4.json');
+        fs.writeFileSync(p4, JSON.stringify(t4));
+        const r4 = run(['verify', '--snapshot', SNAPSHOT, '--plan', p4, '--no-resweep', '--allow-uncommitted']);
+        check('D: tampered plan header (distributor) -> verify FAILs the binding check',
+            r4.status === 1 && r4.out.includes('FAIL  plan header binds snapshot identity'));
+
+        // summary-count tamper (poolSize/seats), transfers untouched — same class
+        const t5 = JSON.parse(JSON.stringify(plan));
+        t5.poolSize = 1; t5.seats = 999;
+        const p5 = path.join(tmp, 'tampered5.json');
+        fs.writeFileSync(p5, JSON.stringify(t5));
+        const r5 = run(['verify', '--snapshot', SNAPSHOT, '--plan', p5, '--no-resweep', '--allow-uncommitted']);
+        check('D: tampered summary counts -> verify FAILs the reproduce check',
+            r5.status === 1 && r5.out.includes('FAIL  plan summary counts reproduce exactly'));
+
+        // verify without --commit-tx must NOT print ALL PASS unless explicitly accepted
+        const r6 = run(['verify', '--snapshot', SNAPSHOT, '--plan', PLAN, '--no-resweep']);
+        check('D: missing --commit-tx -> verify FAILs (no silent ALL PASS)',
+            r6.status === 1 && r6.out.includes('FAIL  on-chain commitment verified'));
 
         const t3 = JSON.parse(JSON.stringify(plan));
         t3.seedHex = sha256hex('not-the-beacon');
         const p3 = path.join(tmp, 'tampered3.json');
         fs.writeFileSync(p3, JSON.stringify(t3));
-        const r3 = run(['verify', '--snapshot', SNAPSHOT, '--plan', p3, '--no-resweep']);
+        const r3 = run(['verify', '--snapshot', SNAPSHOT, '--plan', p3, '--no-resweep', '--allow-uncommitted']);
         check('D: tampered seed -> verify FAILs the seed derivation check',
             r3.status === 1 && r3.out.includes('FAIL  seed == SHA-256(beacon ledger hash)'));
     }

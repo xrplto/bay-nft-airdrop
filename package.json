@@ -1,0 +1,9 @@
+{
+  "name": "fairdrop",
+  "version": "2.0.0",
+  "private": true,
+  "description": "Provably-fair proportional NFT distribution on the XRP Ledger. Verification path (fairdrop.js + tests) is zero-dependency; xrpl is needed ONLY by the operator executor (execute_offers.js) for local signing.",
+  "license": "MIT",
+  "engines": { "node": ">=18" },
+  "dependencies": { "xrpl": "^4.0.0" }
+}

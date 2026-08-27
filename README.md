@@ -8,8 +8,10 @@ can choose or predict**. Every step is a pure function of public chain data,
 so anyone can re-derive the entire result from scratch and check it
 byte-for-byte. No trust required.
 
-Zero dependencies. Node 18+. Works against any XRPL node with Clio API
-support (default `https://s1.ripple.com:51234/`).
+The verification path (`fairdrop.js` + both test batteries) is
+zero-dependency — Node 18+ and any XRPL node with Clio API support (default
+`https://s1.ripple.com:51234/`). Only the operator executor
+(`execute_offers.js`) needs `xrpl` for local signing (`npm i`).
 
 ## How it stays trustless
 
@@ -112,6 +114,10 @@ Run `verify` with a node the operator doesn't control. It independently:
 - checks the on-chain commitment memo matches
   `SHA-256({version, snapshotHash, codeSha256, beaconLedger})` and was
   validated **before** the beacon ledger.
+
+`verify` FAILS when no `--commit-tx` is given — an unanchored plan proves
+nothing about when its rules were fixed. Passing `--allow-uncommitted`
+accepts that explicitly; it still prints as a skipped check, never silently.
 
 Then run the statistical battery yourself (uses the published snapshot,
 ~10k full plan simulations):

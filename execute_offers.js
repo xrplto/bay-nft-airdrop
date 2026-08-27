@@ -92,9 +92,17 @@ class TxSender {
             const { tx_blob, hash } = this.wallet.sign(full);
             const sub = await rpc(this.node, 'submit', { tx_blob });
             const code = sub.engine_result || sub.error || 'unknown';
-            if (sub.status === 'error' || !/^(tes|ter|tec)/.test(code)) {
+            // tefALREADY/tefPAST_SEQ on our own blob = rpc() retried a submit
+            // whose first copy already landed — the tx IS in flight; poll it.
+            const inFlight = sub.status !== 'error'
+                && (/^(tes|ter|tec)/.test(code) || code === 'tefALREADY' || code === 'tefPAST_SEQ');
+            if (!inFlight) {
                 out.push({ tx: full, hash, result: `SUBMIT_FAILED:${code}` });
-                await this.syncSeq(); // resync after a rejected submission
+                // A rejected submission never consumed the sequence. Do NOT
+                // resync from validated state here: earlier txs of this batch
+                // aren't validated yet, so a resync rewinds BELOW them and
+                // every remaining tx collides with tefPAST_SEQ.
+                this.seq--;
             } else out.push({ tx: full, hash, result: null, lls });
         }
         // poll to validation

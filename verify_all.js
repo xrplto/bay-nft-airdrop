@@ -5,7 +5,7 @@
 // fairdrop.js, snapshot.json, plan.json, test_randomization.js and
 // test_edgecases.js (all published together) and run:
 //
-//   node verify_all.js [--node https://your.node:51234/] [--commit-tx HASH]
+//   node verify_all.js [--node https://your.node:51234/] [--commit-tx HASH] [--allow-uncommitted]
 //
 // Stages (each also runnable on its own):
 //   1. fairdrop.js verify      — resweep chain at the snapshot ledger, recheck
@@ -28,12 +28,14 @@ const opt = (name, dflt) => {
 };
 const node = opt('--node', 'https://s2.ripple.com:51234/');
 const commitTx = opt('--commit-tx', null);
+const allowUncommitted = args.includes('--allow-uncommitted');
 const here = f => path.join(__dirname, f);
 
 const stages = [
     ['1/3 chain reproduction (fairdrop.js verify)',
         [here('fairdrop.js'), 'verify', '--snapshot', here('snapshot.json'), '--plan', here('plan.json'),
-            '--node', node, ...(commitTx ? ['--commit-tx', commitTx] : [])]],
+            '--node', node, ...(commitTx ? ['--commit-tx', commitTx] : []),
+            ...(allowUncommitted ? ['--allow-uncommitted'] : [])]],
     ['2/3 randomization battery (test_randomization.js)',
         [here('test_randomization.js'), here('snapshot.json')]],
     ['3/3 tamper suite (test_edgecases.js)',

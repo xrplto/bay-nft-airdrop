@@ -1,11 +1,11 @@
 {
-  "version": "fairdrop-v1",
+  "version": "fairdrop-v2",
   "network": "xrpl-mainnet",
   "issuer": "rEzbi191M5AjrucxXKZWbR5QeyfpbedBcV",
   "taxon": 1,
   "distributor": "rESvnQrpWVho8kEiHEVKXMBoiUzdkYVtDL",
   "exclude": [],
-  "ledgerIndex": 105966965,
+  "ledgerIndex": 106578837,
   "holders": [
     [
       "r1krq2FBRELxZdM9mawRmxYHPiroM2LzA",
@@ -117,7 +117,7 @@
     ],
     [
       "r3LAichpcBeZWk7LLSZcfSQcqYsvQ6beBc",
-      68
+      63
     ],
     [
       "r3LzwEHgnFdY9KWG1GkBdFxC1FKtHmwdta",
@@ -353,10 +353,6 @@
     ],
     [
       "r42MG58qfDnDDRehG5nSBceiCaDp8MSDkn",
-      1
-    ],
-    [
-      "r44MoneyvZgUo8wEidp6NXcghkZ8YVMdkB",
       1
     ],
     [
@@ -1124,6 +1120,10 @@
       1
     ],
     [
+      "rBLw8LMMyKKxaMqsNU5V66SqxHKPPXxM4G",
+      1
+    ],
+    [
       "rBM87WWmAJTzE94vrUMxb7im8ikHNwNrw6",
       1
     ],
@@ -1205,7 +1205,7 @@
     ],
     [
       "rBco8dgTyU8BHYGdyDCS1kU7AQVE7cgBwQ",
-      47
+      50
     ],
     [
       "rBdXDJPb9tKgFoH658mvFsScXTfE6nQr3j",
@@ -1221,10 +1221,6 @@
     ],
     [
       "rBfFZLaisjUZCxSaxt5r3tAD6QE5vTSXCN",
-      1
-    ],
-    [
-      "rBfZcvSS2ZtHh6MgJ1EgnnnGabivN2wsPX",
       1
     ],
     [
@@ -1313,6 +1309,10 @@
     ],
     [
       "rBwfxak25nxS6wAonPE69c3cGosnSLmGwj",
+      1
+    ],
+    [
+      "rBxWA99Ma49JBjrmQGBTATi7e8HAAZCBnL",
       1
     ],
     [
@@ -1605,7 +1605,7 @@
     ],
     [
       "rDvMTYwQxRbC4EJX28FYHnnes8BV1ZJyoo",
-      5
+      4
     ],
     [
       "rDx1L7E2fLfVQ9xaM5yQTvV6KZJH36Z1xp",
@@ -1714,10 +1714,6 @@
     [
       "rEF8bsdnu3KQbwtdmTY9X1iSC8hKE4KRh7",
       1
-    ],
-    [
-      "rEFBdtuun8ZrtfN7kF9kmFEeJMno2yNYt1",
-      4
     ],
     [
       "rEFozKf2PzeQp7SDGJiDwqkMk7qgEND9f4",
@@ -1888,10 +1884,6 @@
       24
     ],
     [
-      "rEneXvwAdbCHswpSDsoQnQqLyBCdB6pvgo",
-      4
-    ],
-    [
       "rEoMeHK9uvznfx5RrAm2YC3og8SnTpFZvE",
       1
     ],
@@ -1941,7 +1933,7 @@
     ],
     [
       "rEv89gxJXXbJBBZ7oMj2z8FuPRY9ueSCqT",
-      16
+      10
     ],
     [
       "rEvZDU8n8aUikj7uFZqTNyqG7ysc7WHvg9",
@@ -2164,10 +2156,6 @@
       1
     ],
     [
-      "rGa9bqKh1grj9xoB4cWvQA1i4YrQJzR5BF",
-      1
-    ],
-    [
       "rGbKeuLHLH7K1s9U46TNgc34eJhES4QY8G",
       1
     ],
@@ -2196,6 +2184,10 @@
       3
     ],
     [
+      "rGg7u4QCnRR9a1ifFL1LvS4upGrS67Ngdz",
+      1
+    ],
+    [
       "rGgaqq29pa8KLD9RKgBBT6hYDbo6CnAJLE",
       2
     ],
@@ -2214,10 +2206,6 @@
     [
       "rGoLdHQ7ujED1TMNPBJH9Ek6VJwU7Ns7kr",
       1
-    ],
-    [
-      "rGosMADXPEt2TWk5A1u93iYhbM4rhRvACa",
-      5
     ],
     [
       "rGsGzX73FPvQvm3vkvPoSC5bLeXgMr467g",
@@ -2269,7 +2257,7 @@
     ],
     [
       "rH6ze8uUL1npWeNrgavWiq1RtLRC87aCiD",
-      49
+      47
     ],
     [
       "rH7RNF5MwTm8VbLMcsDHWTNnMggjNSaM9o",
@@ -2353,7 +2341,7 @@
     ],
     [
       "rHMsSsS1ZyjppNciaCCwQugHpYUqQ4ZHjG",
-      118
+      119
     ],
     [
       "rHN6tXV4XMNSSxM19Z3yvJHBqAMjh1j993",
@@ -2604,10 +2592,6 @@
       1
     ],
     [
-      "rJ3rpH8uzewc6XKBKGE3aiD1h3nnD7ReLh",
-      2
-    ],
-    [
       "rJ5VPwTXUwgDAJG1dDDxsMeX9QTYzyvtnr",
       2
     ],
@@ -2836,6 +2820,10 @@
       1
     ],
     [
+      "rJgJtPkEWTj4LyGoPXaRctMKooUdrKaotJ",
+      1
+    ],
+    [
       "rJiUYwBmb7G9N6KSUFxMoXR6FRyMi5QiKG",
       1
     ],
@@ -3041,6 +3029,10 @@
     ],
     [
       "rKHvdxCqJuFPkcx45RRggrPBMN1pZJsZWT",
+      1
+    ],
+    [
+      "rKJSoJkdj9rWAGCezs6TyBjkvPit9t3SFp",
       1
     ],
     [
@@ -3700,11 +3692,19 @@
       10
     ],
     [
+      "rMRKx3FfA56Xa4jmfDxNUP6DYtK77rYQKZ",
+      2
+    ],
+    [
       "rMTCT8pJVznULMdDVN22VDkAw7hz6R1SwB",
       5
     ],
     [
       "rMTSps14tsVnXu3pg8FbJ6U4SEhvyKvh7V",
+      1
+    ],
+    [
+      "rMTaAGVd77vAbzDv8qhoMgnZR1T5R3w6Wq",
       1
     ],
     [
@@ -3905,7 +3905,7 @@
     ],
     [
       "rNHYtkkYopq9Ah3acnzZrHVJ33FiVjFDTJ",
-      5
+      3
     ],
     [
       "rNJTNLJpCmMwiz5K4zt1bgfeUviQcC6yef",
@@ -3997,7 +3997,7 @@
     ],
     [
       "rNdgP6HN3hFi6PM5LgeiXVhjh1Pt5Va7FW",
-      2
+      6
     ],
     [
       "rNeExV12iSMJRENsh8sgGvSkBTpxi2NtwG",
@@ -4425,7 +4425,7 @@
     ],
     [
       "rQU4YbYjnu2bCwSFYJ8yGKTSxfWvNphKwe",
-      3
+      2
     ],
     [
       "rQaJ5GfB1mK23oPWDGQfi67CCQmuYKRDuo",
@@ -4541,7 +4541,7 @@
     ],
     [
       "rUBnV73HFo41eez5PgWyLWQcgxzVUebSSv",
-      48
+      49
     ],
     [
       "rUBueDjRtoTtCys5vZRZaLvABxvGi2jigu",
@@ -4572,6 +4572,10 @@
       75
     ],
     [
+      "rUHt9pHJARmxKs6x5AnUoBYMq8XoxW64To",
+      4
+    ],
+    [
       "rUHwKcWDF5EzkJB9GgbcMBaDqxgafi61Gx",
       1
     ],
@@ -4593,7 +4597,7 @@
     ],
     [
       "rUMVJAtgRzvXscToHFXAFsiVAbC4wtKT82",
-      48
+      49
     ],
     [
       "rUMq71cnN7iXastr9ojjr4MHVWBSto6nK",
@@ -4817,7 +4821,7 @@
     ],
     [
       "rUssFTx1RPc6UZsBp8LvMWEcVYYGzqwrPM",
-      24
+      54
     ],
     [
       "rUsvLqkv39dHfdzSy7QvTLUC1JSmu2MZbZ",
@@ -4928,10 +4932,6 @@
       1
     ],
     [
-      "ra9Y7CwXnJcTeF46uvHN3RLKxEtH4xzbBZ",
-      2
-    ],
-    [
       "ra9maFab8nSfYeE3MPDCdcMmLzbjzQ5de9",
       64
     ],
@@ -4961,15 +4961,11 @@
     ],
     [
       "raGeipdbev2HehuNTpbmmDuKEq87aaPY4x",
-      1
+      2
     ],
     [
       "raHBvNUxhdHRMKM97vgb8x3CsV172WJXU1",
       3
-    ],
-    [
-      "raHn3mt26cAD2mCAut2Q2oXujjj1DhFTRp",
-      1
     ],
     [
       "raJEVJFbQTsbzmRC2PhnS56vK4Rvuf87bs",
@@ -5404,10 +5400,6 @@
       1
     ],
     [
-      "rfYM8B4roN6fcgyGeycNnftvANKVWFmp5o",
-      1
-    ],
-    [
       "rfZ6qfExbxJNZaAx5FtSEW6j3Hq9aVxk94",
       1
     ],
@@ -5497,7 +5489,7 @@
     ],
     [
       "rftJQ2scyo5U1ngvLLqH4HT9YeXV9GiMbD",
-      47
+      48
     ],
     [
       "rftd6ePu4CzirXphvmmMTQeFtoqHh179Nk",
@@ -5729,7 +5721,7 @@
     ],
     [
       "rhvPytr3WbUnT85knTUq4sgzUqSSDov4Ui",
-      9
+      1
     ],
     [
       "rhwNJkXPi9qGXgTXB1d4VyEEGhJyj7Gu3i",
@@ -5841,7 +5833,7 @@
     ],
     [
       "rn9p9u9edRx5MeUTvg3pHkQa9EV4XoDBY7",
-      2
+      1
     ],
     [
       "rnA7GhHW2SmLFz8si6UVcZMjws91PwLBqi",
@@ -6245,7 +6237,7 @@
     ],
     [
       "rpFZigZb8kfKbR4VZPivXkCHtxFgBt9SpW",
-      11
+      7
     ],
     [
       "rpFuaywSioJAPfMZEC3qxbdBAgzN6mQrLT",
@@ -6265,7 +6257,7 @@
     ],
     [
       "rpK3wUTJ3VQnQVDGsomCLK8ceU5Q4vksKT",
-      6
+      3
     ],
     [
       "rpKB3k9edf2xguceN2LWVvDdJK9RF1wnbY",
@@ -6693,7 +6685,7 @@
     ],
     [
       "rsjk3B9W6fcSMLYYxtHDVtnLVY4VnbGJG2",
-      79
+      80
     ],
     [
       "rsn1QFCEZrs75JPtK1srZWqfnCDo2oPmtL",
@@ -7636,7 +7628,7 @@
     "00081388A47691FB124F91B5FF0F5246AED2B5275385689FFF3D08180000207E",
     "00081388A47691FB124F91B5FF0F5246AED2B5275385689FFF4D8E56000008BC"
   ],
-  "snapshotHash": "6c8112411ef94cc7ecb6a04827958e12a7cfb313911b67b7410755df9c770ace",
-  "generatedAt": "2026-07-31T02:52:25.434Z",
+  "snapshotHash": "7492ad02fad9e4a35ae7a7a4b57d974fdd5ce6d2b03681819dba10f94b058b9f",
+  "generatedAt": "2026-08-27T13:36:57.694Z",
   "node": "https://s1.ripple.com:51234/"
 }

@@ -243,6 +243,11 @@ const seedFromBeacon = (beacon) => sha256hex(beacon.ledgerHash);
 function loadSnapshot(path) {
     const s = JSON.parse(fs.readFileSync(path, 'utf8'));
     if (snapshotHashOf(s) !== s.snapshotHash) throw new Error('snapshot file corrupted: embedded snapshotHash does not match content');
+    // version participates in snapshotHash, so a snapshot from another code
+    // version can never be reproduced from scratch by THIS code (`snapshot`
+    // would stamp a different label and derive a different hash). Refuse it —
+    // re-run `snapshot` with the code being published.
+    if (s.version !== VERSION) throw new Error(`snapshot version ${s.version} != code ${VERSION} — re-take the snapshot with this code`);
     return s;
 }
 
@@ -329,6 +334,11 @@ async function cmdVerify(a) {
     check('snapshot content matches its embedded snapshotHash', true);
     const plan = JSON.parse(fs.readFileSync(a.plan || 'plan.json', 'utf8'));
     check('plan references this snapshot', plan.snapshotHash === snapshot.snapshotHash);
+    // Header fields drive audit-offers (distributor) and human review — a
+    // tampered header with untouched transfers used to verify ALL PASS.
+    check('plan header binds snapshot identity (version/issuer/taxon/distributor/ledger)',
+        plan.version === VERSION && plan.issuer === snapshot.issuer && plan.taxon === snapshot.taxon
+        && plan.distributor === snapshot.distributor && plan.snapshotLedger === snapshot.ledgerIndex);
 
     // Excluded addresses are the one input a verifier CANNOT re-derive from chain: the resweep applies
     // snapshot.exclude while rebuilding, so an excluded holder is absent from both sides and every other
@@ -382,6 +392,9 @@ async function cmdVerify(a) {
     check('transfers reproduce exactly from the seed', rebuilt.transfersHash === actualHash,
         `rebuilt=${rebuilt.transfersHash.slice(0, 16)}...`);
     check('allocations reproduce exactly', canonicalJson(rebuilt.allocations) === canonicalJson(plan.allocations));
+    check('plan summary counts reproduce exactly (poolSize/seats/recipients)',
+        rebuilt.poolSize === plan.poolSize && rebuilt.seats === plan.seats
+        && rebuilt.recipientsTotal === plan.recipientsTotal && rebuilt.recipientsWinning === plan.recipientsWinning);
     const myCode = sha256hex(fs.readFileSync(__filename));
     check('running the same code version as the plan', myCode === plan.codeSha256,
         myCode === plan.codeSha256 ? undefined : `mine=${myCode.slice(0, 16)}... plan=${String(plan.codeSha256).slice(0, 16)}...`);
@@ -467,7 +480,14 @@ async function cmdVerify(a) {
             check('commitment validated BEFORE beacon ledger', Number(txLedger) < plan.beacon.ledgerIndex,
                 `commit@${txLedger} beacon@${plan.beacon.ledgerIndex}`);
         }
-    } else console.log('[fairdrop] no --commit-tx given — commitment anchoring not checked');
+    } else {
+        // Same shape as the exclusions check: the commitment is the ONE thing
+        // proving the rules predate the beacon entropy. Silently skipping it
+        // let "ALL PASS" endorse a plan whose beacon could have been re-rolled.
+        check('on-chain commitment verified', !!a['allow-uncommitted'],
+            a['allow-uncommitted'] ? 'SKIPPED via --allow-uncommitted — nothing proves the rules predate the beacon'
+                : 'no --commit-tx given — pass the commitment tx hash, or --allow-uncommitted to accept an unanchored plan');
+    }
 
     console.log(`\n${failures === 0 ? 'ALL PASS — plan is fully reproducible from public data' : failures + ' FAILURE(S)'}`);
     process.exit(failures ? 1 : 0);
@@ -537,7 +557,7 @@ if (require.main === module) {
   snapshot      --issuer r.. --taxon N --distributor r.. [--ledger L] [--exclude a,b] [--node URL] [--out f]
   plan          --snapshot f --beacon-ledger N [--node URL] [--out f]
   commit        --snapshot f --beacon-ledger N
-  verify        --snapshot f --plan f [--node URL] [--commit-tx HASH] [--no-resweep] [--allow-exclusions]
+  verify        --snapshot f --plan f [--node URL] [--commit-tx HASH] [--no-resweep] [--allow-exclusions] [--allow-uncommitted]
   audit-offers  --plan f [--node URL]
 
 default node: ${DEFAULT_NODE}`);
