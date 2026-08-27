@@ -8,10 +8,10 @@ can choose or predict**. Every step is a pure function of public chain data,
 so anyone can re-derive the entire result from scratch and check it
 byte-for-byte. No trust required.
 
-The verification path (`fairdrop.js` + both test batteries) is
-zero-dependency — Node 18+ and any XRPL node with Clio API support (default
-`https://s1.ripple.com:51234/`). Only the operator executor
-(`execute_offers.js`) needs `xrpl` for local signing (`npm i`).
+The verification path (`fairdrop.js`) is zero-dependency — Node 18+ and any
+XRPL node with Clio API support (default `https://s1.ripple.com:51234/`).
+Only the operator executor (`execute_offers.js`) needs `xrpl` for local
+signing (`npm i`).
 
 ## How it stays trustless
 
@@ -57,9 +57,6 @@ math, computed in exact integer arithmetic (BigInt, float-proof):
 
 Full byte-level spec (canonical ordering, seed derivation, rand consumption
 order, canonical JSON) is in the header of `fairdrop.js`.
-`test_randomization.js` must stay green against any change: it proves the
-amounts are seed-independent and equal to an independent exact-math reference,
-and that the id-shuffle is statistically uniform.
 
 ## Operator walkthrough
 
@@ -94,13 +91,6 @@ node fairdrop.js audit-offers --plan plan.json
   with validation polling), `--commit` (submits the commitment memo),
   `--cancel-open` (post-drop cleanup; also releases the 0.2 XRP per-offer
   reserve).
-- **`test_testnet_e2e.js`** — full write-path rehearsal on XRPL testnet:
-  faucet wallets, a 24-NFT collection, holders seeded 6/3/2/2 (deliberately
-  producing floors, remainder seats AND an exact tie), commitment memo, beacon,
-  execution with a partial run proving idempotent resume, `audit-offers`,
-  `verify --commit-tx`, a wrong-wallet accept that must fail with
-  `tecNO_PERMISSION` (destination lock), real claims, and cancellation.
-  Run this green before any mainnet execution.
 
 ## Verifier walkthrough (don't trust us)
 
@@ -119,19 +109,9 @@ Run `verify` with a node the operator doesn't control. It independently:
 nothing about when its rules were fixed. Passing `--allow-uncommitted`
 accepts that explicitly; it still prints as a skipped check, never silently.
 
-Then run the statistical battery yourself (uses the published snapshot,
-~10k full plan simulations):
-
-```bash
-TRIALS=10000 node test_randomization.js snapshot.json
-```
-
-It proves: same seed reproduces the plan; input order can't change it; the
-allocation is identical across hundreds of different seeds and equals an
-independent exact-arithmetic reference (amounts have no random component);
-NFT-id assignment is uniform; different seeds decorrelate. It also runs two
-rigged negative controls through the same battery and requires them to be
-FLAGGED — so the battery itself demonstrably can fail.
+The full test batteries (statistical battery over ~10k plan simulations,
+tamper suite, testnet E2E rehearsal) live in this repo's git history — commit
+`73677d7` and earlier — and run unchanged against the published artifacts.
 
 ## Honest caveats
 
@@ -144,6 +124,3 @@ FLAGGED — so the battery itself demonstrably can fail.
   zero-cost sell offers locked to each recipient (`Destination`), which the
   recipient accepts. Unclaimed offers can be cancelled later; each open offer
   reserves 0.2 XRP on the distributor until then.
-- `check_holders.js` is an internal xrpl.to audit tool (compares our indexer
-  DB against live chain state); it needs `MONGO_URI` set and is not part of
-  the public verification path.

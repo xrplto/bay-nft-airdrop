@@ -1,6 +1,2 @@
 .env
 node_modules/
-.testnet_state.json
-tn_snapshot.json
-tn_plan.json
-holder_audit_*.json
