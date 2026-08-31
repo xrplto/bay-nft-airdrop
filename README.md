@@ -30,6 +30,11 @@ beacon `106677699`) was superseded by this one to move the beacon closer — the
 and anchored on-chain **before either beacon ledger validated**, so no draw was ever observed
 and discarded. Same snapshot, same code.
 
+**Executed 2026-08-31 UTC — final audit clean: 546/546 destination-locked offers
+on-chain matching the plan, 0 missing, 0 wrong-destination.** Winners claim in any
+XRPL wallet; browse who got which ape at
+[xrpl.to/insights/bored-apes-xrp-club-fairdrop-verification](https://xrpl.to/insights/bored-apes-xrp-club-fairdrop-verification).
+
 `plan.json` (the final allocation) is published here. Verify everything:
 
 ```bash
