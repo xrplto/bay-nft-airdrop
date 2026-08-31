@@ -13,6 +13,25 @@ XRPL node with Clio API support (default `https://s1.ripple.com:51234/`).
 Only the operator executor (`execute_offers.js`) needs `xrpl` for local
 signing (`npm i`).
 
+## Live drop — Bored Apes XRP Club ceremony record
+
+| | |
+|---|---|
+| Collection | issuer `rEzbi191M5AjrucxXKZWbR5QeyfpbedBcV`, taxon `1` |
+| Distributor | `rESvnQrpWVho8kEiHEVKXMBoiUzdkYVtDL` (546 NFTs, 1,767 holders) |
+| Snapshot ledger | `106676567` — `snapshotHash c6fa03cca4718f2207b595492795327b39e8dc0fb5fad923649baf4fd2086783` |
+| Code | `codeSha256 7a7ed0330fa9fa9e5592859a8fc7c562c6eda55af31ab4d8c4b0ec7cd18836db` (= `sha256sum fairdrop.js`) |
+| Beacon ledger | `106677699` (did not exist when the commitment was anchored) |
+| Commitment | `8fd5185e08e997acc7ab84e31f44be04965f7572f7a2ae7907ff2b87411957df` |
+| Commitment tx | `66519E745E17F9881288C3EF797F26223ED9E08960DC5DBEB05AED1007011CC0` (validated in ledger `106676707`, 992 ledgers before the beacon) |
+
+`plan.json` is published here after ledger `106677699` validates. Verify everything:
+
+```bash
+node fairdrop.js verify --snapshot snapshot.json --plan plan.json \
+    --commit-tx 66519E745E17F9881288C3EF797F26223ED9E08960DC5DBEB05AED1007011CC0
+```
+
 ## How it stays trustless
 
 1. **Public snapshot, pinned to a ledger.** Holder balances and the pool of
