@@ -177,7 +177,7 @@ function snapshotHashOf(s) {
 
 async function sweepOwnership(node, issuer, taxon, ledgerIndex) {
     const owners = new Map(); // nft_id -> owner (live only)
-    let marker;
+    let marker, pages = 0;
     do {
         const params = { issuer, nft_taxon: taxon, limit: 100, ledger_index: ledgerIndex };
         if (marker) params.marker = marker;
@@ -185,6 +185,7 @@ async function sweepOwnership(node, issuer, taxon, ledgerIndex) {
         if (r.status === 'error') throw new Error(`nfts_by_issuer: ${r.error}`);
         for (const n of r.nfts) if (!n.is_burned) owners.set(n.nft_id, n.owner);
         marker = r.marker;
+        if (++pages % 25 === 0) console.log(`[fairdrop]   ...sweep page ${pages}, ${owners.size} live nfts so far`);
     } while (marker);
     return owners;
 }

@@ -31,6 +31,12 @@ if (!xrpl) { try { xrpl = require('xrpl'); } catch (e) { console.error('[execute
 
 const FEE_DROPS = '12'; // house rule: always hardcode 12 drops
 
+// every consequential step logs with a timestamp so a ceremony run leaves a
+// complete audit trail on stdout; problems go to stderr as well
+const ts = () => new Date().toISOString();
+const log = (...a) => console.log(ts(), '[execute]', ...a);
+const logErr = (...a) => console.error(ts(), '[execute]', ...a);
+
 function loadEnv() {
     const p = path.join(__dirname, '.env');
     if (!fs.existsSync(p)) return;
@@ -62,6 +68,7 @@ async function rpc(node, method, params) {
             return r;
         } catch (e) {
             if (attempt >= 6) throw e;
+            logErr(`rpc ${method} attempt ${attempt}/6 failed (${e.message}) — retrying`);
             await new Promise(r => setTimeout(r, 1000 * attempt));
         }
     }
@@ -99,6 +106,7 @@ class TxSender {
         const r = await rpc(this.node, 'account_info', { account: this.account, ledger_index: 'validated' });
         if (r.status === 'error') throw new Error(`account_info ${this.account}: ${r.error}`);
         this.seq = r.account_data.Sequence;
+        log(`sequence synced from validated ledger: ${this.seq}`);
     }
     async sendBatch(txs) {
         if (this.seq === null) await this.syncSeq();
@@ -109,6 +117,9 @@ class TxSender {
             const { tx_blob, hash } = this.wallet.sign(full);
             const sub = await rpc(this.node, 'submit', { tx_blob });
             const code = sub.engine_result || sub.error || 'unknown';
+            const what = [tx.TransactionType, tx.NFTokenID && `nft…${tx.NFTokenID.slice(-8)}`,
+                tx.Destination && `-> ${tx.Destination}`].filter(Boolean).join(' ');
+            (/^tes/.test(code) ? log : logErr)(`submit seq=${full.Sequence} ${what}: ${code} (${hash})`);
             // tefALREADY/tefPAST_SEQ on our own blob = rpc() retried a submit
             // whose first copy already landed — the tx IS in flight; poll it.
             const inFlight = sub.status !== 'error'
@@ -130,9 +141,15 @@ class TxSender {
                 if (r.status !== 'error' && (r.validated === true || r.meta)) {
                     o.result = (r.meta && (r.meta.TransactionResult || r.meta)) || 'unknown';
                     o.meta = r.meta;
+                    o.ledgerIndex = r.ledger_index;
+                    (o.result === 'tesSUCCESS' ? log : logErr)(`validated ${o.hash} in ledger ${r.ledger_index}: ${o.result}`);
                     break;
                 }
-                if (await validatedLedger(this.node) > o.lls + 2) { o.result = 'EXPIRED'; await this.syncSeq(); break; }
+                if (await validatedLedger(this.node) > o.lls + 2) {
+                    o.result = 'EXPIRED';
+                    logErr(`EXPIRED ${o.hash} — not validated by ledger ${o.lls}; resyncing sequence`);
+                    await this.syncSeq(); break;
+                }
                 await sleep(1500);
             }
         }
@@ -169,17 +186,21 @@ async function nftOwner(node, nftId) {
 // ------------------------------------------------------------------- modes
 async function modeOffers(a, node, wallet) {
     const plan = JSON.parse(fs.readFileSync(a.plan || 'plan.json', 'utf8'));
-    console.log(`[execute] signing for ${plan.distributor} via ${await assertAuthority(node, wallet, plan.distributor)}`);
+    log(`signing for ${plan.distributor} via ${await assertAuthority(node, wallet, plan.distributor)}`);
     const limit = a.limit ? Number(a.limit) : Infinity;
+    log('pre-scan (read-only): sweeping existing offers + current owners...');
     const existing = await ownSellOffers(node, plan.distributor);
+    log(`pre-scan: distributor has open sell offers on ${existing.size} NFTs`);
     const pending = [], skippedOffer = [], skippedClaimed = [];
+    let scanned = 0;
     for (const t of plan.transfers) {
+        if (++scanned % 100 === 0) log(`pre-scan ${scanned}/${plan.transfers.length}...`);
         const offers = existing.get(t.nft_id) || [];
         if (offers.some(o => o.Destination === t.to && o.Amount === '0')) { skippedOffer.push(t); continue; }
         if ((await nftOwner(node, t.nft_id)) === t.to) { skippedClaimed.push(t); continue; }
         if (pending.length < limit) pending.push(t);
     }
-    console.log(`[execute] plan=${plan.transfers.length} already-offered=${skippedOffer.length} already-claimed=${skippedClaimed.length} to-create=${pending.length}`);
+    log(`plan=${plan.transfers.length} already-offered=${skippedOffer.length} already-claimed=${skippedClaimed.length} to-create=${pending.length}`);
     const sender = new TxSender(node, wallet, plan.distributor);
     let ok = 0; const failed = [];
     for (let i = 0; i < pending.length; i += 8) {
@@ -192,7 +213,7 @@ async function modeOffers(a, node, wallet) {
             if (r.result === 'tesSUCCESS') ok++;
             else failed.push({ nft: r.tx.NFTokenID, result: r.result });
         }
-        console.log(`[execute] ${Math.min(i + 8, pending.length)}/${pending.length} submitted (${ok} ok)`);
+        log(`progress: ${Math.min(i + 8, pending.length)}/${pending.length} processed (${ok} ok)`);
     }
     console.log(`\ncreated=${ok} skipped(offer)=${skippedOffer.length} skipped(claimed)=${skippedClaimed.length} failed=${failed.length}`);
     for (const f of failed.slice(0, 20)) console.log(`  FAILED ${f.nft}: ${f.result}`);
@@ -203,12 +224,16 @@ async function modeCommit(a, node, wallet) {
     const fair = require('./fairdrop.js');
     const snap = JSON.parse(fs.readFileSync(a.snapshot || 'snapshot.json', 'utf8'));
     if (fair.snapshotHashOf(snap) !== snap.snapshotHash) throw new Error('snapshot corrupted');
-    console.log(`[execute] signing for ${snap.distributor} via ${await assertAuthority(node, wallet, snap.distributor)}`);
+    log(`signing for ${snap.distributor} via ${await assertAuthority(node, wallet, snap.distributor)}`);
     const beaconLedger = Number(a['beacon-ledger']);
     if (!beaconLedger) throw new Error('required: --beacon-ledger N (a FUTURE ledger index)');
+    const nowLedger = await validatedLedger(node);
+    if (beaconLedger <= nowLedger)
+        throw new Error(`beacon ledger ${beaconLedger} is not in the future (validated is ${nowLedger}) — pick a later one`);
+    log(`beacon margin: ${beaconLedger - nowLedger} ledgers (~${Math.round((beaconLedger - nowLedger) * 4 / 60)} min) — the memo must validate before that`);
     const codeSha256 = fair.sha256hex(fs.readFileSync(path.join(__dirname, 'fairdrop.js')));
     const commitment = fair.commitmentOf(snap.snapshotHash, codeSha256, beaconLedger);
-    console.log(`[execute] commitment ${commitment} (beacon ledger ${beaconLedger})`);
+    log(`commitment ${commitment} (beacon ledger ${beaconLedger})`);
     const sender = new TxSender(node, wallet, snap.distributor);
     const [r] = await sender.sendBatch([{
         TransactionType: 'AccountSet',
@@ -217,13 +242,15 @@ async function modeCommit(a, node, wallet) {
             MemoData: commitment.toUpperCase(),
         } }],
     }]);
-    console.log(`[execute] commit tx ${r.hash} -> ${r.result}`);
+    log(`commit tx ${r.hash} -> ${r.result}`);
+    if (r.result === 'tesSUCCESS' && r.ledgerIndex)
+        log(`commitment ANCHORED in ledger ${r.ledgerIndex} — ${beaconLedger - r.ledgerIndex} ledgers before the beacon. Save this tx hash for verify --commit-tx.`);
     process.exit(r.result === 'tesSUCCESS' ? 0 : 1);
 }
 
 async function modeCancelOpen(a, node, wallet) {
     const plan = JSON.parse(fs.readFileSync(a.plan || 'plan.json', 'utf8'));
-    console.log(`[execute] signing for ${plan.distributor} via ${await assertAuthority(node, wallet, plan.distributor)}`);
+    log(`signing for ${plan.distributor} via ${await assertAuthority(node, wallet, plan.distributor)}`);
     const wanted = new Map(plan.transfers.map(t => [t.nft_id, t.to]));
     const existing = await ownSellOffers(node, plan.distributor);
     const ids = [];
@@ -232,12 +259,13 @@ async function modeCancelOpen(a, node, wallet) {
             if (wanted.get(nftId) === o.Destination && o.Amount === '0') ids.push(o.index);
         }
     }
-    console.log(`[execute] cancelling ${ids.length} open plan offers`);
+    log(`cancelling ${ids.length} open plan offers`);
     const sender = new TxSender(node, wallet, plan.distributor);
     let failed = 0;
     for (let i = 0; i < ids.length; i += 200) { // NFTokenCancelOffer caps at 500 ids/tx
         const [r] = await sender.sendBatch([{ TransactionType: 'NFTokenCancelOffer', NFTokenOffers: ids.slice(i, i + 200) }]);
-        if (r.result !== 'tesSUCCESS') { failed++; console.log(`  cancel batch FAILED: ${r.result}`); }
+        if (r.result !== 'tesSUCCESS') { failed++; logErr(`cancel batch ${i / 200 + 1} FAILED: ${r.result}`); }
+        else log(`cancel batch ${i / 200 + 1}: ${Math.min(i + 200, ids.length)}/${ids.length} done`);
     }
     process.exit(failed ? 1 : 0);
 }
@@ -262,12 +290,12 @@ if (require.main === module) (async () => {
     const a = parseArgs(process.argv.slice(2));
     const node = a.node || 'https://s1.ripple.com:51234/';
     const seed = process.env.FAIRDROP_SEED;
-    if (!seed) { console.error('[execute] set FAIRDROP_SEED (env or gitignored .env)'); process.exit(2); }
+    if (!seed) { logErr('set FAIRDROP_SEED (env or gitignored .env)'); process.exit(2); }
     const wallet = walletFromSeed(seed);
     const mode = a.commit ? 'commit' : a['cancel-open'] ? 'cancel-open' : 'offers';
-    console.log(`[execute] mode=${mode} wallet=${wallet.address} node=${node}`);
-    if (!a.yes) { console.error('[execute] this SUBMITS transactions — re-run with --yes to proceed'); process.exit(2); }
+    log(`mode=${mode} wallet=${wallet.address} node=${node}`);
+    if (!a.yes) { logErr('this SUBMITS transactions — re-run with --yes to proceed'); process.exit(2); }
     if (mode === 'commit') await modeCommit(a, node, wallet);
     else if (mode === 'cancel-open') await modeCancelOpen(a, node, wallet);
     else await modeOffers(a, node, wallet);
-})().catch(e => { console.error('[execute]', e.message || e); process.exit(2); });
+})().catch(e => { logErr(e.message || e); process.exit(2); });
