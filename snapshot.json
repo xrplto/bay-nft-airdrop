@@ -5,7 +5,7 @@
   "taxon": 1,
   "distributor": "rESvnQrpWVho8kEiHEVKXMBoiUzdkYVtDL",
   "exclude": [],
-  "ledgerIndex": 106578837,
+  "ledgerIndex": 106676567,
   "holders": [
     [
       "r1krq2FBRELxZdM9mawRmxYHPiroM2LzA",
@@ -3236,10 +3236,6 @@
       1
     ],
     [
-      "rKrGsoz1NuKjjERBLdPWGkMvDfoTHkoXDc",
-      1
-    ],
-    [
       "rKrKMXV93DFZaLRiMdqwuo6JLW7eoyGAfC",
       1
     ],
@@ -4425,7 +4421,7 @@
     ],
     [
       "rQU4YbYjnu2bCwSFYJ8yGKTSxfWvNphKwe",
-      2
+      1
     ],
     [
       "rQaJ5GfB1mK23oPWDGQfi67CCQmuYKRDuo",
@@ -4668,6 +4664,10 @@
       1
     ],
     [
+      "rUYdYFmwr9yD8aiUZQpSN7BgKinPfjBFTa",
+      1
+    ],
+    [
       "rUZBmzWvZYGNH1zbdepAnquh3gRtiV5XfH",
       2
     ],
@@ -4821,7 +4821,7 @@
     ],
     [
       "rUssFTx1RPc6UZsBp8LvMWEcVYYGzqwrPM",
-      54
+      55
     ],
     [
       "rUsvLqkv39dHfdzSy7QvTLUC1JSmu2MZbZ",
@@ -5489,7 +5489,7 @@
     ],
     [
       "rftJQ2scyo5U1ngvLLqH4HT9YeXV9GiMbD",
-      48
+      49
     ],
     [
       "rftd6ePu4CzirXphvmmMTQeFtoqHh179Nk",
@@ -6756,10 +6756,6 @@
       1
     ],
     [
-      "ruLh1QKjJzLdBFnxeC3mRWH5Bheykx1cK",
-      1
-    ],
-    [
       "rv6rvGaf1r2gD6WwJnXaScSS8MXPTJemw",
       2
     ],
@@ -7628,7 +7624,7 @@
     "00081388A47691FB124F91B5FF0F5246AED2B5275385689FFF3D08180000207E",
     "00081388A47691FB124F91B5FF0F5246AED2B5275385689FFF4D8E56000008BC"
   ],
-  "snapshotHash": "7492ad02fad9e4a35ae7a7a4b57d974fdd5ce6d2b03681819dba10f94b058b9f",
-  "generatedAt": "2026-08-27T13:36:57.694Z",
+  "snapshotHash": "c6fa03cca4718f2207b595492795327b39e8dc0fb5fad923649baf4fd2086783",
+  "generatedAt": "2026-08-31T22:58:46.327Z",
   "node": "https://s1.ripple.com:51234/"
 }
