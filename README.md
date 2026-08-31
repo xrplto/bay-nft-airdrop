@@ -30,7 +30,7 @@ beacon `106677699`) was superseded by this one to move the beacon closer — the
 and anchored on-chain **before either beacon ledger validated**, so no draw was ever observed
 and discarded. Same snapshot, same code.
 
-`plan.json` is published here after ledger `106676929` validates. Verify everything:
+`plan.json` (the final allocation) is published here. Verify everything:
 
 ```bash
 node fairdrop.js verify --snapshot snapshot.json --plan plan.json \
