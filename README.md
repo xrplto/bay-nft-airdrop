@@ -21,15 +21,20 @@ signing (`npm i`).
 | Distributor | `rESvnQrpWVho8kEiHEVKXMBoiUzdkYVtDL` (546 NFTs, 1,767 holders) |
 | Snapshot ledger | `106676567` — `snapshotHash c6fa03cca4718f2207b595492795327b39e8dc0fb5fad923649baf4fd2086783` |
 | Code | `codeSha256 7a7ed0330fa9fa9e5592859a8fc7c562c6eda55af31ab4d8c4b0ec7cd18836db` (= `sha256sum fairdrop.js`) |
-| Beacon ledger | `106677699` (did not exist when the commitment was anchored) |
-| Commitment | `8fd5185e08e997acc7ab84e31f44be04965f7572f7a2ae7907ff2b87411957df` |
-| Commitment tx | `66519E745E17F9881288C3EF797F26223ED9E08960DC5DBEB05AED1007011CC0` (validated in ledger `106676707`, 992 ledgers before the beacon) |
+| Beacon ledger | `106676929` (did not exist when the commitment was anchored) |
+| Commitment | `b01c3a9f9b6bd9efa43acf118c7855cfc147dd5cdfad4f74502dd903a6167e93` |
+| Commitment tx | `52BECC0601879F136357F258FA3A14E3753A135D1C3FDB6DDEBA39A533F56FB1` (validated in ledger `106676857`, 72 ledgers before the beacon) |
 
-`plan.json` is published here after ledger `106677699` validates. Verify everything:
+An earlier commitment (tx `66519E745E17F9881288C3EF797F26223ED9E08960DC5DBEB05AED1007011CC0`,
+beacon `106677699`) was superseded by this one to move the beacon closer — the switch was made
+and anchored on-chain **before either beacon ledger validated**, so no draw was ever observed
+and discarded. Same snapshot, same code.
+
+`plan.json` is published here after ledger `106676929` validates. Verify everything:
 
 ```bash
 node fairdrop.js verify --snapshot snapshot.json --plan plan.json \
-    --commit-tx 66519E745E17F9881288C3EF797F26223ED9E08960DC5DBEB05AED1007011CC0
+    --commit-tx 52BECC0601879F136357F258FA3A14E3753A135D1C3FDB6DDEBA39A533F56FB1
 ```
 
 ## How it stays trustless
