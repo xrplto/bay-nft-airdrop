@@ -148,7 +148,9 @@ async function ownSellOffers(node, account) {
         const params = { account, type: 'nft_offer', limit: 400, ledger_index: 'validated' };
         if (marker) params.marker = marker;
         const r = await rpc(node, 'account_objects', params);
-        if (r.status === 'error') break;
+        // never degrade to "no offers" on error — offers mode would then create
+        // duplicates and cancel-open would report success having cancelled nothing
+        if (r.status === 'error') throw new Error(`account_objects ${account}: ${r.error}`);
         for (const o of r.account_objects || []) {
             if ((o.Flags & 1) !== 1) continue; // sell offers only
             if (!map.has(o.NFTokenID)) map.set(o.NFTokenID, []);

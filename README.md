@@ -85,7 +85,10 @@ node fairdrop.js audit-offers --plan plan.json
 
 - **`execute_offers.js`** — the only file that signs anything. Seed comes ONLY
   from `FAIRDROP_SEED` (env or gitignored `.env`); it refuses to run unless the
-  derived address equals the plan's distributor, and requires `--yes`.
+  derived address holds signing authority for the plan's distributor — the
+  account itself, or its on-chain `RegularKey`, checked live via `account_info`
+  (the distributor has `lsfDisableMaster` set, so only its regular key signs) —
+  and requires `--yes`.
   Idempotent: re-running skips already-created offers and already-claimed NFTs,
   so a crashed run is simply re-run. Modes: create offers (default, chunked
   with validation polling), `--commit` (submits the commitment memo),
